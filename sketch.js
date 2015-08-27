@@ -5,6 +5,7 @@ var Pointer = function(x,y,z){
   this.r = 130;
   this.maxforce = 24.0;
   this.maxspeed = 13.0;
+  this.gazeAngle = 0.0;
 };
 
 Pointer.prototype = {
@@ -12,16 +13,25 @@ Pointer.prototype = {
   applyForce : function(force){
     this.acceleration.add(force);
   },
-  applyBehaviors : function(pointers){
+  applyBehaviors : function(x, y, pointers){
     var _separateForce = this.separate(pointers);
-    var _seekForce = this.seek(createVector(mouseX, mouseY));
+    var _seekForce = this.seek(createVector(x,y));
+    var _gazeForce = this.gaze(x,y);
     _separateForce.mult(4);
     _seekForce.mult(1);
     
     this.applyForce(_separateForce);
     this.applyForce(_seekForce);
+    this.update();
   },
   
+  gaze: function(targetX, targetY){
+    var desired = p5.Vector.sub(createVector(targetX, targetY), this.location);
+    desired.normalize();
+    this.gazeAngle = atan2(desired.y, desired.x);
+    return this;
+  },
+
   seek : function(target){
       var desired = p5.Vector.sub(target,this.location);
       desired.normalize();
@@ -61,14 +71,16 @@ Pointer.prototype = {
     this.velocity.add(this.acceleration);
     this.velocity.limit(this.maxspeed);
     this.location.add(this.velocity);
-    this.acceleration.mult(0);
+    //this.acceleration.mult(0);
   },
   
   display : function(){
-    stroke(0);
+    //stroke(0);
     push();
     translate(this.location.x, this.location.y, 0);
-    specularMaterial(255);
+    rotateY(this.gazeAngle);
+    rotateX(this.gazeAngle);
+    specularMaterial(100);
     box();
     pop();
   }
@@ -92,16 +104,16 @@ function setup() {
 
 function draw() {
   background(255);
-  ambientLight(50);
-  pointLight(250, 250, 250, -70, 70, 0);
+  ambientLight(200);
+  
   translate(-width/2,-height/2,-800);
-  focus();
+  pointLight(250, 250, 250, -width/4, -height/4, 0);
+  focus(mouseX, mouseY);
 }
 
-function focus(){
+function focus(mouseX, mouseY){
   for(var pointer in pointers){
-    pointers[pointer].applyBehaviors(pointers);
-    pointers[pointer].update();
+    pointers[pointer].applyBehaviors(mouseX, mouseY, pointers);
     pointers[pointer].display();
     //console.log(pointers[pointer].location);
   }
