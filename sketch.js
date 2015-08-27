@@ -1,11 +1,13 @@
-var Pointer = function(x,y,z){
-  this.location = createVector(x,y,z);
+var Pointer = function(){
+
+  this.location = (arguments[0] instanceof p5.Vector) ?
+    arguments[0] : createVector(x,y,z);
   this.velocity = createVector(0,0,0);
   this.acceleration = createVector(0,0,0);
-  this.r = 130;
-  this.maxforce = 24.0;
-  this.maxspeed = 13.0;
-  this.gazeAngle = 0.0;
+  this.r = 250;
+  this.maxforce = 10.0;
+  this.maxspeed = 10.0;
+  this.gazeAngle = createVector(0,0,0);
 };
 
 Pointer.prototype = {
@@ -17,8 +19,8 @@ Pointer.prototype = {
     var _separateForce = this.separate(pointers);
     var _seekForce = this.seek(createVector(x,y));
     var _gazeForce = this.gaze(x,y);
-    _separateForce.mult(4);
-    _seekForce.mult(1);
+    _separateForce.mult(30);
+    //_seekForce.mult(1);
     
     this.applyForce(_separateForce);
     this.applyForce(_seekForce);
@@ -26,9 +28,12 @@ Pointer.prototype = {
   },
   
   gaze: function(targetX, targetY){
-    var desired = p5.Vector.sub(createVector(targetX, targetY), this.location);
+    var desired = p5.Vector.sub(createVector(targetX, targetY, 800), this.location);
     desired.normalize();
-    this.gazeAngle = atan2(desired.y, desired.x);
+    var pitch = atan2(desired.x,desired.z);
+    var yaw = atan2(desired.y, sqrt(desired.x*desired.x + desired.z*desired.z));
+    var azimuth = atan2(-desired.x, -desired.z);
+    this.gazeAngle = createVector(pitch, yaw, azimuth);
     return this;
   },
 
@@ -78,8 +83,10 @@ Pointer.prototype = {
     //stroke(0);
     push();
     translate(this.location.x, this.location.y, 0);
-    rotateY(this.gazeAngle);
-    rotateX(this.gazeAngle);
+    //rotateX(this.gazeAngle.x);
+    rotateX(this.gazeAngle.y);
+    rotateY(this.gazeAngle.x);
+    pointLight(100, 100, 100, mouseX, mouseY, 800);
     specularMaterial(100);
     box();
     pop();
@@ -91,23 +98,27 @@ var t = 0.0,
   yScalar = 50.0,
   xScalar = 10.0,
   radius = 10.0,
-  numPointers = 100;
+  gridWidth = 9,
+  gridHeight = 9;
 
 var pointers = [];
 
 function setup() {
   createCanvas(windowWidth, windowHeight, 'webgl');
-  for(var i =0; i < numPointers; i++){
-    pointers.push( new Pointer(width/2, height/2, 0.0) );
+  for(var i =0; i < gridWidth; i++){
+    for(var j=0; j < gridHeight; j++){
+      pointers.push( new Pointer(new p5.Vector(i * width / gridWidth,
+        j * height / gridHeight), 0) );
+    }
   }
 }
 
 function draw() {
-  background(255);
+  background(250);
   ambientLight(200);
   
   translate(-width/2,-height/2,-800);
-  pointLight(250, 250, 250, -width/4, -height/4, 0);
+  
   focus(mouseX, mouseY);
 }
 

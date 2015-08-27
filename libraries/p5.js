@@ -1,4 +1,4 @@
-/*! p5.js v0.4.8 August 26, 2015 */
+/*! p5.js v0.4.8 August 27, 2015 */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.p5 = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 
 },{}],2:[function(_dereq_,module,exports){
@@ -7799,7 +7799,6 @@ p5.prototype.texture = function(image){
     //@TODO handle following cases:
     //- 2D canvas (p5 inst)
   }
-
   if (_isPowerOf2(image.width) && _isPowerOf2(image.height)) {
     gl.generateMipmap(gl.TEXTURE_2D);
   } else {
@@ -9113,7 +9112,7 @@ p5.Renderer3D.prototype.resetStack = function(){
   shaderStack = [];
   //holding colors declaration, like [0, 120, 0]
   this.colorStack = [];
-  //holding mode, like TIANGLE or 'LINES'
+  //holding mode, like TRIANGLE or 'LINES'
   this.modeStack = [];
   //holding 'fill' or 'stroke'
   this.drawModeStack = [];
@@ -9238,8 +9237,19 @@ p5.Renderer3D.prototype.scale = function(x, y, z) {
 };
 
 /**
+ * [rotate description]
+ * @param  {Number} rad  angle in radians
+ * @param  {p5.Vector | Array} axis axis to rotate around
+ * @return {p5.Renderer3D}      [description]
+ */
+p5.Renderer3D.prototype.rotate = function(rad, axis){
+  this.uMVMatrix.rotate(rad, axis);
+  return this;
+};
+
+/**
  * [rotateX description]
- * @param  {[type]} rad [description]
+ * @param  {Number} rad radians to rotate
  * @return {[type]}     [description]
  */
 p5.Renderer3D.prototype.rotateX = function(rad) {
@@ -9249,7 +9259,7 @@ p5.Renderer3D.prototype.rotateX = function(rad) {
 
 /**
  * [rotateY description]
- * @param  {[type]} rad [description]
+ * @param  {Number} rad rad radians to rotate
  * @return {[type]}     [description]
  */
 p5.Renderer3D.prototype.rotateY = function(rad) {
@@ -9259,7 +9269,7 @@ p5.Renderer3D.prototype.rotateY = function(rad) {
 
 /**
  * [rotateZ description]
- * @param  {[type]} rad [description]
+ * @param  {Number} rad rad radians to rotate
  * @return {[type]}     [description]
  */
 p5.Renderer3D.prototype.rotateZ = function(rad) {
@@ -16863,11 +16873,18 @@ p5.prototype.resetMatrix = function() {
  * </code>
  * </div>
  */
-p5.prototype.rotate = function(r) {
+p5.prototype.rotate = function() {
+  var r = arguments[0];
   if (this._angleMode === constants.DEGREES) {
     r = this.radians(r);
   }
-  this._graphics.rotate(r);
+  //in webgl mode
+  if(arguments.length > 1){
+    this._graphics.rotate(r, arguments[1]);
+  }
+  else {
+    this._graphics.rotate(r);
+  }
   return this;
 };
 
