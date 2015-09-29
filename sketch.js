@@ -1,3 +1,92 @@
+var x = 100;
+var y = 100;
+var xspeed = 8.3;
+var yspeed = 20.3;
+var t = 0.0,
+  u = 0.0,
+  yScalar = 50.0,
+  xScalar = 10.0,
+  radius = 10.0,
+  gridWidth = 20,
+  gridHeight = 20;
+var timeUntilBoredom = 200;
+var isBored = false;
+var pointers = [];
+var inactivityTime = null;
+
+function setup() {
+  createCanvas(windowWidth, windowHeight, 'webgl');
+  for(var i =0; i <= gridWidth; i++){
+    for(var j=0; j <= gridHeight; j++){
+      pointers.push( new Pointer(new p5.Vector(i * (width / gridWidth),
+        j * (height / gridHeight), 0) ));
+      console.log(width + " is", height + " is", i * (width / gridWidth),
+        j * (height / gridHeight));
+    }
+  }
+}
+
+function draw() {
+  background(250);
+  translate(-width/2,-height/2,100);
+  
+  ambientLight(200);
+  x = x + xspeed;
+  y = y + yspeed;
+
+  //Check for bouncing.
+  if ((x > width) || (x < 0)) {
+    xspeed = xspeed * -1;
+  }
+  if ((y > height) || (y < 0)) {
+    yspeed = yspeed * -1;
+  }
+  pointLight(255, 255, 255, x, y, 800);
+  // pointLight(255, 255, 255, mouseX - width/2, mouseY - height /2, 800);
+  
+
+
+  focus(mouseX, mouseY);
+}
+
+function mouseMoved(){
+  resetTimer();
+}
+
+function mouseClicked(){
+  x = mouseX; //assign x the value of our mouseX position
+  y = mouseY; //assign y the value of our mouseY position
+  if(x >= width){
+    xspeed  = abs(xspeed) * -1.0; //make sure xspeed is negative
+  }
+  else{
+    xspeed = abs(xspeed); //otherwise xspeed is positive
+  }
+  yspeed = abs(yspeed); //make sure yspeed is always positive
+}
+
+function resetTimer() {
+  if (inactivityTime !== null) {
+    clearTimeout(inactivityTime);
+    isBored = false;
+  } else {
+      inactivityTime = window.setTimeout(boredom, timeUntilBoredom);
+  }
+
+}
+function boredom(){
+  isBored = true;
+}
+
+function focus(mouseX, mouseY){
+  for(var pointer in pointers){
+    // pointers[pointer].applyBehaviors(mouseX, mouseY, pointers);
+    pointers[pointer].gaze(mouseX, mouseY);
+    pointers[pointer].display();
+    //console.log(pointers[pointer].location);
+  }
+}
+
 var Pointer = function(){
 
   this.location = (arguments[0] instanceof p5.Vector) ?
@@ -21,9 +110,13 @@ Pointer.prototype = {
     var _gazeForce = this.gaze(x,y);
     _separateForce.mult(30);
     //_seekForce.mult(1);
-    
+    ////TODO clean this up!
     this.applyForce(_separateForce);
+    if (!isBored) {
     this.applyForce(_seekForce);
+    } else {
+      this.applyForce(-_seekForce);
+    }
     this.update();
   },
   
@@ -86,46 +179,8 @@ Pointer.prototype = {
     //rotateX(this.gazeAngle.x);
     rotateX(this.gazeAngle.y);
     rotateY(this.gazeAngle.x);
-    pointLight(100, 100, 100, mouseX, mouseY, 800);
     specularMaterial(100);
-    box();
+    box(40);
     pop();
   }
 };
-
-var t = 0.0,
-  u = 0.0,
-  yScalar = 50.0,
-  xScalar = 10.0,
-  radius = 10.0,
-  gridWidth = 9,
-  gridHeight = 9;
-
-var pointers = [];
-
-function setup() {
-  createCanvas(windowWidth, windowHeight, 'webgl');
-  for(var i =0; i < gridWidth; i++){
-    for(var j=0; j < gridHeight; j++){
-      pointers.push( new Pointer(new p5.Vector(i * width / gridWidth,
-        j * height / gridHeight), 0) );
-    }
-  }
-}
-
-function draw() {
-  background(250);
-  ambientLight(200);
-  
-  translate(-width/2,-height/2,-800);
-  
-  focus(mouseX, mouseY);
-}
-
-function focus(mouseX, mouseY){
-  for(var pointer in pointers){
-    pointers[pointer].applyBehaviors(mouseX, mouseY, pointers);
-    pointers[pointer].display();
-    //console.log(pointers[pointer].location);
-  }
-}
